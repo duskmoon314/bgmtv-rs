@@ -84,6 +84,7 @@ dependencies = [
  "tokio",
  "tokio-test",
  "typed-builder",
+ "url",
 ]
 
 [[package]]

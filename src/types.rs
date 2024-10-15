@@ -8,6 +8,12 @@ pub enum Error {
 
     #[error("Header value is not str: {0}")]
     HeaderValueToStr(#[from] reqwest::header::ToStrError),
+
+    #[error("Invalid URL: {0}")]
+    InvalidUrl(#[from] url::ParseError),
+
+    #[error("Cannot serialize: {0}")]
+    Serialize(#[from] serde_json::Error),
 }
 
 /// Character Type (角色类型)
@@ -72,6 +78,17 @@ pub enum InfoboxValue {
 pub enum InfoboxValueItem {
     KV { k: String, v: String },
     V { v: String },
+}
+
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+pub struct PagedSubject {
+    pub total: u64,
+
+    pub limit: u64,
+
+    pub offset: u64,
+
+    pub data: Vec<Subject>,
 }
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
@@ -164,6 +181,88 @@ pub struct RelatedPerson {
     pub eps: String,
 }
 
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+pub struct SearchSubjects {
+    /// 搜索结果数量
+    pub total: u64,
+
+    /// 当前分页数量
+    pub limit: u64,
+
+    /// 当前分页参数
+    pub offset: u64,
+
+    /// 数据
+    pub data: Vec<SearchSubjectsItem>,
+}
+
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+pub struct SearchSubjectsBody {
+    pub keyword: String,
+
+    pub filter: SearchSubjectsFilter,
+
+    pub sort: SortType,
+}
+
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize)]
+pub struct SearchSubjectsFilter {
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub r#type: Vec<SubjectType>,
+
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub tag: Vec<String>,
+
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub air_date: Vec<String>,
+
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub rating: Vec<String>,
+
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub rank: Vec<String>,
+
+    pub nsfw: bool,
+}
+
+/// Search Subjects Item (搜索条目数据)
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+pub struct SearchSubjectsItem {
+    pub id: u64,
+
+    pub r#type: SubjectType,
+
+    pub date: String,
+
+    pub image: String,
+
+    pub summary: String,
+
+    pub name: String,
+
+    pub name_cn: String,
+
+    pub tags: Vec<SubjectTag>,
+
+    pub score: f64,
+
+    pub rank: u64,
+}
+
+#[derive(Clone, Copy, Debug, Default, PartialEq, Deserialize, Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum SortType {
+    /// 匹配程度，meilisearch 默认排序
+    #[default]
+    Match,
+    /// 收藏人数
+    Heat,
+    /// 排名由高到低
+    Rank,
+    /// 评分由高到低
+    Score,
+}
+
 /// Subject (条目)
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub struct Subject {
@@ -178,6 +277,8 @@ pub struct Subject {
 
     /// 中文名称
     pub name_cn: String,
+
+    pub summary: String,
 
     /// 是否为书籍系列的主条目
     pub series: bool,
@@ -212,6 +313,68 @@ pub struct Subject {
 
     /// 标签
     pub tags: Vec<SubjectTag>,
+}
+
+/// Subject Category (条目分类)
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(untagged)]
+pub enum SubjectCategory {
+    Book(SubjectBookCategory),
+    Anime(SubjectAnimeCategory),
+    Game(SubjectGameCategory),
+    Real(SubjectRealCategory),
+}
+
+/// Subject Book Category (书籍条目分类)
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize_repr, Serialize_repr)]
+#[repr(u16)]
+pub enum SubjectBookCategory {
+    Other = 0,
+    Comic = 1001,
+    Novel = 1002,
+    Illustration = 1003,
+}
+
+/// Subject Anime Category (动画条目分类)
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize_repr, Serialize_repr)]
+#[repr(u16)]
+pub enum SubjectAnimeCategory {
+    TV = 1,
+    OVA = 2,
+    Movie = 3,
+    Web = 4,
+}
+
+/// Subject Game Category (游戏条目分类)
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize_repr, Serialize_repr)]
+#[repr(u16)]
+pub enum SubjectGameCategory {
+    Other = 0,
+    Games = 4001,
+    Software = 4002,
+    DLC = 4003,
+    Tabletop = 4005,
+}
+
+/// Subject Real Category (三次元条目分类)
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize_repr, Serialize_repr)]
+#[repr(u16)]
+pub enum SubjectRealCategory {
+    Other = 0,
+    /// 日剧
+    JP = 1,
+    /// 欧美剧
+    EN = 2,
+    /// 华语剧
+    CN = 3,
+    /// 电视剧
+    TV = 6001,
+    /// 电影
+    Movie = 6002,
+    /// 演出
+    Live = 6003,
+    /// 综艺
+    Show = 6004,
 }
 
 /// Subject Collection (条目收藏)
@@ -414,5 +577,12 @@ mod tests {
         assert_eq!(subject.rating.rank, 1824);
         assert_eq!(subject.collection.wish, 274);
         assert!(subject.tags.len() > 0);
+    }
+
+    #[test]
+    fn test_subject_category() {
+        let cat = SubjectCategory::Book(SubjectBookCategory::Comic);
+
+        assert_eq!(serde_json::to_string(&cat).unwrap(), r#"1001"#);
     }
 }

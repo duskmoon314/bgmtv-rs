@@ -10,6 +10,21 @@ pub(crate) const DEFAULT_USER_AGENT: &str = concat!(
     ")",
 );
 
+/// # Client, API Wrapper
+///
+/// ## Example
+///
+/// ```
+/// # use bgmtv::prelude::*;
+/// let client = Client::builder()
+///     .user_agent("xxx/yyy/1.0")
+///     .token("auth_token")
+///     .build();
+///
+/// assert_eq!(client.base_url(), "https://api.bgm.tv");
+/// assert_eq!(client.user_agent(), "xxx/yyy/1.0");
+/// assert_eq!(client.token(), Some("auth_token"));
+/// ```
 #[derive(Debug, TypedBuilder)]
 pub struct Client {
     #[builder(default = "https://api.bgm.tv".to_string())]
