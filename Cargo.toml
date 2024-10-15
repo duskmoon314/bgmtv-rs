@@ -3,6 +3,7 @@ name = "bgmtv"
 version = "0.1.0"
 authors = ["duskmoon (Campbell He) <kp.campbell.he@duskmoon314.com>"]
 edition = "2021"
+description = "An API wrapper for bangumi.tv based on reqwest."
 repository = "https://github.com/duskmoon314/bgmtv-rs"
 license = "MIT"
 include = ["/src", "Cargo.toml", "README.md", "LICENSE"]
