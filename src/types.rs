@@ -1,20 +1,6 @@
+use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
-
-#[derive(Debug, thiserror::Error)]
-pub enum Error {
-    #[error("Reqwest error: {0}")]
-    Reqwest(#[from] reqwest::Error),
-
-    #[error("Header value is not str: {0}")]
-    HeaderValueToStr(#[from] reqwest::header::ToStrError),
-
-    #[error("Invalid URL: {0}")]
-    InvalidUrl(#[from] url::ParseError),
-
-    #[error("Cannot serialize: {0}")]
-    Serialize(#[from] serde_json::Error),
-}
 
 /// Character Type (角色类型)
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize_repr, Serialize_repr)]
@@ -205,24 +191,59 @@ pub struct SearchSubjectsBody {
     pub sort: SortType,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, PartialEq, Deserialize, Serialize, Builder)]
+#[builder(default)]
 pub struct SearchSubjectsFilter {
+    /// 条目类型
     #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[builder(setter(name = "types", each = "r#type"))]
     pub r#type: Vec<SubjectType>,
 
+    /// 标签
     #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[builder(setter(name = "tags", each = "tag"))]
     pub tag: Vec<String>,
 
+    /// 日期条件
+    ///
+    /// ## Example
+    ///
+    /// - `>=2020-07-01`
+    /// - `<2020-10-01`
     #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[builder(setter(name = "air_dates", each = "air_date"))]
     pub air_date: Vec<String>,
 
+    /// 评分条件
+    ///
+    /// ## Example
+    ///
+    /// - `>=6`
+    /// - `<8`
     #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[builder(setter(name = "ratings", each = "rating"))]
     pub rating: Vec<String>,
 
+    /// 排名条件
+    ///
+    /// ## Example
+    ///
+    /// - `>10`
+    /// - `<=18`
     #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[builder(setter(name = "ranks", each = "rank"))]
     pub rank: Vec<String>,
 
+    /// 是否为 NSFW
+    ///
+    /// 默认为 `false`, 无权限 (未提供 Auth token) 时此项无效
     pub nsfw: bool,
+}
+
+impl SearchSubjectsFilter {
+    pub fn builder() -> SearchSubjectsFilterBuilder {
+        SearchSubjectsFilterBuilder::default()
+    }
 }
 
 /// Search Subjects Item (搜索条目数据)
@@ -464,13 +485,14 @@ pub struct SubjectTag {
 }
 
 /// Subject Type (条目类型)
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize_repr, Serialize_repr)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Deserialize_repr, Serialize_repr)]
 #[repr(u8)]
 pub enum SubjectType {
     /// 书籍
     Book = 1,
 
     /// 动画
+    #[default]
     Anime = 2,
 
     /// 音乐
@@ -553,6 +575,16 @@ mod tests {
             infoboxes[0].value,
             InfoboxValue::Single("魔法禁书目录".to_string())
         );
+    }
+
+    #[test]
+    fn test_search_subjects_filter_builder() {
+        let filter = SearchSubjectsFilter::builder()
+            .r#type(SubjectType::Anime)
+            .build()
+            .unwrap();
+
+        assert_eq!(filter.r#type, vec![SubjectType::Anime]);
     }
 
     #[test]

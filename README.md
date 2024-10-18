@@ -10,7 +10,8 @@ use bgmtv::prelude::*;
 tokio_test::block_on(async {
     let client = Client::builder()
     .user_agent("duskmoon/bgmtv/0.1.0 (https://github.com/duskmoon314/bgmtv-rs)")
-    .build();
+    .build()
+    .expect("Failed to build client");
 
     let subject = client.get_subject(3559).await.expect("Failed to get subject");
 
