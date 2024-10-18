@@ -1,7 +1,8 @@
-use derive_builder::{Builder, UninitializedFieldError};
-// use typed_builder::TypedBuilder;
+//! mod client: Client and its methods.
+//!
+//! 此模块包含了 [`Client`] 结构体、其相关方法的辅助结构体与实现。
 
-pub mod subjects;
+use derive_builder::{Builder, UninitializedFieldError};
 
 pub(crate) const DEFAULT_USER_AGENT: &str = concat!(
     "duskmoon/bgmtv/",
@@ -12,6 +13,16 @@ pub(crate) const DEFAULT_USER_AGENT: &str = concat!(
 );
 
 /// # Client, API Wrapper
+///
+/// [`Client`] 是对 API 的封装，提供了对主要 API 的访问方法。如果有 API 的访问尚未实现，可以调用 [`Client::client`] 方法获取内部的
+/// [`reqwest::Client`] 对象，然后自行实现。
+///
+/// ## Usage
+///
+/// [`Client`] 的构建高度依赖于 [`ClientBuilder`]，你可以参考 [`ClientBuilder`] 的说明来了解有哪些配置项可以设置。
+///
+/// 一般情况下，你可以直接使用 [`Client::new`] 来创建一个默认的 [`Client`] 对象用于开发。不过对于生产环境，强烈建议类似下面的示例来创建一个
+/// 具有对应的 user agent 和 token 的 [`Client`] 对象。
 ///
 /// ## Example
 ///
@@ -29,25 +40,29 @@ pub(crate) const DEFAULT_USER_AGENT: &str = concat!(
 /// ```
 #[derive(Debug, Builder)]
 pub struct Client {
+    /// Base URL of the API.
+    ///
+    /// 默认值为 "<https://api.bgm.tv>"。一般情况下不需要修改。
     #[builder(default = "https://api.bgm.tv".to_string())]
     pub(crate) base_url: String,
 
+    /// User agent.
+    ///
+    /// 根据 API 要求，此项需要设置为 `<开发者>/<应用名>/<版本号>` 的格式，以便于 bgm.tv 识别。
+    ///
+    /// 本 crate 提供了一个默认值，即 `duskmoon/bgmtv/<version>`。不过强烈建议开发者自行设置。
     #[builder(default, setter(into, strip_option))]
     pub(crate) user_agent: Option<String>,
 
+    /// Authorization token.
+    ///
+    /// 用于访问需要授权的 API。如果不需要授权，可以不设置。
     #[builder(default, setter(into, strip_option))]
     pub(crate) token: Option<String>,
 
-    // #[builder(default = {
-    //     let mut headers = reqwest::header::HeaderMap::new();
-    //     if let Some(token) = token.as_ref() {
-    //         headers.insert(reqwest::header::AUTHORIZATION, reqwest::header::HeaderValue::from_str(&format!("Bearer {}", token)).unwrap());
-    //     }
-    //     reqwest::Client::builder()
-    //         .user_agent(user_agent.as_ref().unwrap_or(&DEFAULT_USER_AGENT.to_string()))
-    //         .default_headers(headers)
-    //         .build().unwrap()
-    // })]
+    /// Internal reqwest client.
+    ///
+    /// 一般情况下不需要设置。如果需要自定义 [`reqwest::Client`]，可以使用此项。
     #[builder(default = "self.default_client()?")]
     pub(crate) client: reqwest::Client,
 }
@@ -80,14 +95,16 @@ impl Default for Client {
     }
 }
 
+/// # Basic methods for [`Client`].
 impl Client {
-    /// Create a new default client.
+    /// 创建一个默认的 [`Client`] 对象。
     pub fn new() -> Self {
         Self::builder()
             .build()
             .expect("Failed to build default client. Please report this issue.")
     }
 
+    /// 创建一个 [`ClientBuilder`] 对象，用于构建 [`Client`] 对象。
     pub fn builder() -> ClientBuilder {
         ClientBuilder::default()
     }
@@ -112,6 +129,8 @@ impl Client {
         self.token.as_deref()
     }
 }
+
+pub mod subjects;
 
 #[cfg(test)]
 mod tests {

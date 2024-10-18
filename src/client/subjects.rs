@@ -1,3 +1,5 @@
+//! # Subjects Resource (条目资源)
+
 use std::ops::Deref;
 
 use derive_builder::Builder;
@@ -10,12 +12,12 @@ use crate::{error::*, types::*};
 /// | API                                         | Description      | Methods                                                    |
 /// | :------------------------------------------ | :--------------- | :--------------------------------------------------------- |
 /// | `POST /v0/search/subjects`                  | 条目搜索         | [`search_subjects`](Client::search_subjects)               |
-/// | `GET /v0/subjects`                          | 浏览条目         | [`get_subjects`](Client::get_subjects)                     |
-/// | `GET /v0/subjects/{subject_id}`             | 获取条目         | [`get_subject`](Client::get_subject)                       |
-/// | `GET /v0/subjects/{subject_id}/image`       | 获取条目图片     | [`get_subject_image`](Client::get_subject_image)           |
-/// | `GET /v0/subjects/{subject_id}/persons`     | 获取条目相关人物 | [`get_subject_persons`](Client::get_subject_persons)       |
-/// | `GET /v0/subjects/{subject_id}/characters`  | 获取条目相关角色 | [`get_subject_characters`](Client::get_subject_characters) |
-/// | `GET /v0/subjects/{subject_id}/subjects`    | 获取条目相关条目 | [`get_subject_subjects`](Client::get_subject_subjects)     |
+/// | `GET  /v0/subjects`                         | 浏览条目         | [`get_subjects`](Client::get_subjects)                     |
+/// | `GET  /v0/subjects/{subject_id}`            | 获取条目         | [`get_subject`](Client::get_subject)                       |
+/// | `GET  /v0/subjects/{subject_id}/image`      | 获取条目图片     | [`get_subject_image`](Client::get_subject_image)           |
+/// | `GET  /v0/subjects/{subject_id}/persons`    | 获取条目相关人物 | [`get_subject_persons`](Client::get_subject_persons)       |
+/// | `GET  /v0/subjects/{subject_id}/characters` | 获取条目相关角色 | [`get_subject_characters`](Client::get_subject_characters) |
+/// | `GET  /v0/subjects/{subject_id}/subjects`   | 获取条目相关条目 | [`get_subject_subjects`](Client::get_subject_subjects)     |
 impl Client {
     /// # 条目搜索 `POST /v0/search/subjects`
     ///
@@ -261,6 +263,9 @@ impl Client {
     }
 }
 
+/// # 条目搜索执行器
+///
+/// 此结构用于构建请求参数并发送请求
 #[derive(Debug, Builder)]
 #[builder(pattern = "owned", setter(strip_option))]
 pub struct SearchSubjectsExecutor<'a> {
@@ -295,10 +300,14 @@ impl Deref for SearchSubjectsExecutor<'_> {
 }
 
 impl SearchSubjectsExecutor<'_> {
-    pub fn builder(client: &Client) -> SearchSubjectsExecutorBuilder {
+    /// 返回一个 Builder 模式的 [`SearchSubjectsExecutorBuilder`], 用于构建请求参数并发送请求
+    fn builder(client: &Client) -> SearchSubjectsExecutorBuilder {
         SearchSubjectsExecutorBuilder::default().client(client)
     }
 
+    /// 发送请求
+    ///
+    /// 根据构建的请求参数发送请求，并返回搜索结果
     pub async fn send(&self) -> Result<SearchSubjects, SearchSubjectsError> {
         let url = format!("{}/v0/search/subjects", self.client.base_url);
         let mut url = url::Url::parse(&url)?;
@@ -341,6 +350,9 @@ impl SearchSubjectsExecutorBuilder<'_> {
     }
 }
 
+/// # 浏览条目执行器
+///
+/// 此结构用于构建请求参数并发送请求
 #[derive(Debug, Builder)]
 #[builder(pattern = "owned", setter(strip_option))]
 pub struct GetSubjectsExecutor<'a> {
@@ -396,10 +408,14 @@ impl Deref for GetSubjectsExecutor<'_> {
 }
 
 impl<'a> GetSubjectsExecutor<'a> {
+    /// 返回一个 Builder 模式的 [`GetSubjectsExecutorBuilder`], 用于构建请求参数并发送请求
     fn builder(client: &'a Client) -> GetSubjectsExecutorBuilder {
         GetSubjectsExecutorBuilder::default().client(client)
     }
 
+    /// 发送请求
+    ///
+    /// 根据构建的请求参数发送请求，并返回搜索结果
     pub async fn send(&self) -> Result<PagedSubject, GetSubjectsError> {
         let url = format!("{}/v0/subjects", self.client.base_url);
         let mut url = url::Url::parse(&url)?;

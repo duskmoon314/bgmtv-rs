@@ -1,3 +1,7 @@
+//! bgm.tv API 的数据结构定义
+
+#![allow(missing_docs)]
+
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
@@ -68,27 +72,37 @@ pub enum InfoboxValueItem {
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub struct PagedSubject {
+    /// 条目总数
     pub total: u64,
 
+    /// 每页数量
     pub limit: u64,
 
+    /// 当前页码
     pub offset: u64,
 
+    /// 数据
     pub data: Vec<Subject>,
 }
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub struct Person {
+    /// ID
     pub id: usize,
 
+    /// 名称
     pub name: String,
 
+    /// 人物类型
     pub r#type: PersonType,
 
+    /// 人物职业
     pub career: Vec<PersonCareer>,
 
+    /// 人物图片
     pub images: Option<PersonImages>,
 
+    /// 人物简介
     pub short_summary: String,
 
     pub locked: bool,
@@ -133,16 +147,22 @@ pub enum PersonType {
 /// Related Character (条目相关角色)
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub struct RelatedCharacter {
+    /// ID
     pub id: usize,
 
+    /// 名称
     pub name: String,
 
+    /// 角色类型
     pub r#type: CharacterType,
 
+    /// 角色图片
     pub images: Option<PersonImages>,
 
+    /// 和条目的关系
     pub relation: String,
 
+    /// 演员
     pub actors: Vec<Person>,
 }
 
@@ -158,10 +178,13 @@ pub struct RelatedPerson {
     /// 类型
     pub r#type: PersonType,
 
+    /// 人物职业
     pub career: Vec<PersonCareer>,
 
+    /// 人物图片
     pub images: Option<PersonImages>,
 
+    /// 和条目的关系
     pub relation: String,
 
     pub eps: String,
@@ -184,10 +207,13 @@ pub struct SearchSubjects {
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub struct SearchSubjectsBody {
+    /// 搜索关键词
     pub keyword: String,
 
+    /// 搜索条件
     pub filter: SearchSubjectsFilter,
 
+    /// 排序方式
     pub sort: SortType,
 }
 
@@ -241,6 +267,7 @@ pub struct SearchSubjectsFilter {
 }
 
 impl SearchSubjectsFilter {
+    /// 返回默认的 [`SearchSubjectsFilterBuilder`]，辅助构建搜索条件
     pub fn builder() -> SearchSubjectsFilterBuilder {
         SearchSubjectsFilterBuilder::default()
     }
@@ -249,24 +276,34 @@ impl SearchSubjectsFilter {
 /// Search Subjects Item (搜索条目数据)
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub struct SearchSubjectsItem {
+    /// ID
     pub id: u64,
 
+    /// 条目类型
     pub r#type: SubjectType,
 
+    /// 发布日期
     pub date: String,
 
+    /// 图片
     pub image: String,
 
+    /// 简介
     pub summary: String,
 
+    /// 名称
     pub name: String,
 
+    /// 中文名称
     pub name_cn: String,
 
+    /// 标签    
     pub tags: Vec<SubjectTag>,
 
+    /// 评分
     pub score: f64,
 
+    /// 排名
     pub rank: u64,
 }
 
@@ -299,6 +336,7 @@ pub struct Subject {
     /// 中文名称
     pub name_cn: String,
 
+    /// 简介
     pub summary: String,
 
     /// 是否为书籍系列的主条目
@@ -309,13 +347,16 @@ pub struct Subject {
 
     pub locked: bool,
 
+    /// 发布日期
     pub date: Option<String>,
 
+    /// 发布平台
     pub platform: String,
 
     /// 图片
     pub images: Images,
 
+    /// 附加信息
     pub infobox: Vec<Infobox>,
 
     /// 书籍条目的册数
@@ -324,6 +365,7 @@ pub struct Subject {
     /// 对于书籍条目为话数
     pub eps: u64,
 
+    /// 总集数
     pub total_episodes: u64,
 
     /// 评分
@@ -350,9 +392,16 @@ pub enum SubjectCategory {
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize_repr, Serialize_repr)]
 #[repr(u16)]
 pub enum SubjectBookCategory {
+    /// 其他
     Other = 0,
+
+    /// 漫画
     Comic = 1001,
+
+    /// 小说
     Novel = 1002,
+
+    /// 图集
     Illustration = 1003,
 }
 
@@ -360,9 +409,16 @@ pub enum SubjectBookCategory {
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize_repr, Serialize_repr)]
 #[repr(u16)]
 pub enum SubjectAnimeCategory {
+    /// TV
     TV = 1,
+
+    /// OVA
     OVA = 2,
+
+    /// 电影
     Movie = 3,
+
+    /// 网络
     Web = 4,
 }
 
@@ -370,10 +426,19 @@ pub enum SubjectAnimeCategory {
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize_repr, Serialize_repr)]
 #[repr(u16)]
 pub enum SubjectGameCategory {
+    /// 其他
     Other = 0,
+
+    /// 游戏
     Games = 4001,
+
+    /// 软件
     Software = 4002,
+
+    /// 扩展包
     DLC = 4003,
+
+    /// 桌游
     Tabletop = 4005,
 }
 
@@ -420,12 +485,16 @@ pub struct SubjectCollection {
 /// Subject Rating (条目评分)
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub struct SubjectRating {
+    /// 排名
     pub rank: u64,
 
+    /// 总评分人数
     pub total: u64,
 
+    /// 评分详情
     pub count: SubjectRatingCount,
 
+    /// 分数
     pub score: f64,
 }
 
