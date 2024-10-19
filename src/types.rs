@@ -6,6 +6,81 @@ use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 
+/// Blood Type (血型)
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize_repr, Serialize_repr)]
+#[repr(u8)]
+pub enum BloodType {
+    A = 1,
+    B = 2,
+    AB = 3,
+    O = 4,
+}
+
+/// Character Detail (角色详情)
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+pub struct CharacterDetail {
+    /// ID
+    pub id: u64,
+
+    /// 名称
+    pub name: String,
+
+    /// 角色类型
+    pub r#type: CharacterType,
+
+    /// 角色图片
+    pub images: Option<PersonImages>,
+
+    /// 角色简介
+    pub summary: String,
+
+    pub locked: bool,
+
+    pub infobox: Vec<Infobox>,
+
+    pub gender: Option<String>,
+
+    pub blood_type: Option<BloodType>,
+
+    pub birth_year: Option<u16>,
+
+    pub birth_month: Option<u8>,
+
+    pub birth_day: Option<u8>,
+
+    pub stat: Stat,
+}
+
+/// Character Person (角色人物)
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+pub struct CharacterPerson {
+    /// ID
+    pub id: u64,
+
+    /// 名称
+    pub name: String,
+
+    /// 类型
+    pub r#type: CharacterType,
+
+    /// 人物图片
+    pub images: Option<PersonImages>,
+
+    /// 条目 ID
+    pub subject_id: u64,
+
+    /// 条目类型
+    pub subject_type: SubjectType,
+
+    /// 条目名称
+    pub subject_name: String,
+
+    /// 条目中文名称
+    pub subject_name_cn: String,
+
+    pub staff: Option<String>,
+}
+
 /// Character Type (角色类型)
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize_repr, Serialize_repr)]
 #[repr(u8)]
@@ -190,6 +265,27 @@ pub struct RelatedPerson {
     pub eps: String,
 }
 
+/// Related Subject (相关条目)
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+pub struct RelatedSubject {
+    /// ID
+    pub id: u64,
+
+    /// 类型
+    pub r#type: SubjectType,
+
+    pub staff: String,
+
+    /// 名称
+    pub name: String,
+
+    /// 中文名称
+    pub name_cn: String,
+
+    /// 图片
+    pub image: Option<String>,
+}
+
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub struct SearchSubjects {
     /// 搜索结果数量
@@ -319,6 +415,15 @@ pub enum SortType {
     Rank,
     /// 评分由高到低
     Score,
+}
+
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+pub struct Stat {
+    /// 评论数
+    pub comments: u64,
+
+    /// 收藏数
+    pub collects: u64,
 }
 
 /// Subject (条目)

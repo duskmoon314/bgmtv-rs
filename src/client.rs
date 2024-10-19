@@ -4,6 +4,12 @@
 
 use derive_builder::{Builder, UninitializedFieldError};
 
+use crate::prelude::*;
+
+pub mod subjects;
+
+use subjects::*;
+
 pub(crate) const DEFAULT_USER_AGENT: &str = concat!(
     "duskmoon/bgmtv/",
     env!("CARGO_PKG_VERSION"),
@@ -76,7 +82,7 @@ impl ClientBuilder {
                 reqwest::header::HeaderValue::from_str(&format!("Bearer {}", token)).unwrap(),
             );
         }
-        Ok(reqwest::Client::builder()
+        reqwest::Client::builder()
             .user_agent(
                 self.user_agent
                     .clone()
@@ -85,7 +91,7 @@ impl ClientBuilder {
             )
             .default_headers(headers)
             .build()
-            .map_err(|_| UninitializedFieldError::new("client"))?)
+            .map_err(|_| UninitializedFieldError::new("client"))
     }
 }
 
@@ -130,7 +136,423 @@ impl Client {
     }
 }
 
-pub mod subjects;
+/// # Subjects Resource (条目资源)
+///
+/// | API                                         | Description      | Methods                                                    |
+/// | :------------------------------------------ | :--------------- | :--------------------------------------------------------- |
+/// | `POST /v0/search/subjects`                  | 条目搜索         | [`search_subjects`](Client::search_subjects)               |
+/// | `GET  /v0/subjects`                         | 浏览条目         | [`get_subjects`](Client::get_subjects)                     |
+/// | `GET  /v0/subjects/{subject_id}`            | 获取条目         | [`get_subject`](Client::get_subject)                       |
+/// | `GET  /v0/subjects/{subject_id}/image`      | 获取条目图片     | [`get_subject_image`](Client::get_subject_image)           |
+/// | `GET  /v0/subjects/{subject_id}/persons`    | 获取条目相关人物 | [`get_subject_persons`](Client::get_subject_persons)       |
+/// | `GET  /v0/subjects/{subject_id}/characters` | 获取条目相关角色 | [`get_subject_characters`](Client::get_subject_characters) |
+/// | `GET  /v0/subjects/{subject_id}/subjects`   | 获取条目相关条目 | [`get_subject_subjects`](Client::get_subject_subjects)     |
+impl Client {
+    /// # 条目搜索 `POST /v0/search/subjects`
+    ///
+    /// 返回一个 Builder 模式的 [`SearchSubjectsExecutorBuilder`], 用于构建请求参数并发送请求
+    ///
+    /// ## Example
+    ///
+    /// ```
+    /// # use bgmtv::prelude::*;
+    /// # #[tokio::main]
+    /// # async fn main() -> anyhow::Result<()> {
+    /// let client = Client::new();
+    /// let subjects = client.search_subjects()
+    ///     .keyword("魔法禁书目录")
+    ///     .sort(SortType::Match)
+    ///     .limit(1)
+    ///     .offset(0)
+    ///     .filter(
+    ///         SearchSubjectsFilter::builder()
+    ///         .r#type(SubjectType::Anime)
+    ///         .build()?
+    ///     )
+    ///     .send()
+    ///     .await?;
+    ///
+    /// assert_eq!(subjects.data[0].id, 1014);
+    /// assert_eq!(subjects.data[0].name, "とある魔術の禁書目録");
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub fn search_subjects(&self) -> SearchSubjectsExecutorBuilder {
+        SearchSubjectsExecutor::builder(self)
+    }
+
+    /// # 浏览条目 `GET /v0/subjects`
+    ///
+    /// 返回一个 Builder 模式的 [`GetSubjectsExecutorBuilder`], 用于构建请求参数并发送请求
+    ///
+    /// ## Example
+    ///
+    /// ```
+    /// # use bgmtv::prelude::*;
+    /// # #[tokio::main]
+    /// # async fn main() -> anyhow::Result<()> {
+    /// let client = Client::new();
+    /// let subjects = client.get_subjects()
+    ///     .r#type(SubjectType::Book)
+    ///     .cat(SubjectCategory::Book(SubjectBookCategory::Novel))
+    ///     .sort("date")
+    ///     .year(2023)
+    ///     .limit(1)
+    ///     .send()
+    ///     .await?;
+    ///
+    /// assert_eq!(subjects.data[0].id, 469252);
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub fn get_subjects(&self) -> GetSubjectsExecutorBuilder {
+        GetSubjectsExecutor::builder(self)
+    }
+
+    /// # 获取条目 `GET /v0/subjects/{subject_id}`
+    ///
+    /// ## Arguments
+    ///
+    /// * `subject_id` - 条目 ID
+    ///
+    /// ## Example
+    ///
+    /// ```
+    /// # use bgmtv::prelude::*;
+    /// # tokio_test::block_on(async {
+    /// # let client = Client::new();
+    /// let subject = client.get_subject(3559).await.expect("Failed to get subject");
+    ///
+    /// assert_eq!(subject.name, "とある魔術の禁書目録");
+    /// # });
+    /// ```
+    pub async fn get_subject(&self, subject_id: u64) -> Result<Subject, DepsError> {
+        let url = format!("{}/v0/subjects/{}", self.base_url, subject_id);
+
+        let req = self
+            .client
+            .get(url)
+            .header(reqwest::header::ACCEPT, "application/json")
+            .build()?;
+
+        let res = self.client.execute(req).await?.error_for_status()?;
+
+        let subject: Subject = res.json().await?;
+
+        Ok(subject)
+    }
+
+    /// # 获取条目图片 `GET /v0/subjects/{subject_id}/image`
+    ///
+    /// ## Arguments
+    ///
+    /// * `subject_id` - 条目 ID
+    /// * `type` - 图片类型
+    ///
+    /// ## Example
+    ///
+    /// ```
+    /// # use bgmtv::prelude::*;
+    /// # tokio_test::block_on(async {
+    /// # let client = Client::new();
+    /// let image: Vec<u8> = client.get_subject_image(3559, ImageType::Small).await.expect("Failed to get subject image");
+    ///
+    /// assert_eq!(image.len(), 12020);
+    /// # });
+    /// ```
+    pub async fn get_subject_image(
+        &self,
+        subject_id: u64,
+        image_type: ImageType,
+    ) -> Result<Vec<u8>, DepsError> {
+        let url = format!("{}/v0/subjects/{}/image", self.base_url, subject_id);
+
+        let req = self
+            .client
+            .get(url)
+            .query(&[("type", image_type)])
+            .build()?;
+
+        let res = self.client.execute(req).await?.error_for_status()?;
+
+        let image = res.bytes().await?;
+
+        Ok(image.to_vec())
+    }
+
+    /// # 获取条目相关人物 `GET /v0/subjects/{subject_id}/persons`
+    ///
+    /// ## Arguments
+    ///
+    /// * `subject_id` - 条目 ID
+    ///
+    /// ## Example
+    ///
+    /// ```
+    /// # use bgmtv::prelude::*;
+    /// # tokio_test::block_on(async {
+    /// # let client = Client::new();
+    /// let persons = client.get_subject_persons(3559).await.expect("Failed to get subject persons");
+    ///
+    /// let person = persons.iter().find(|p| p.id == 3608);
+    /// assert_eq!(person.map(|p| p.name.as_str()), Some("鎌池和馬"));
+    /// # });
+    /// ```
+    pub async fn get_subject_persons(
+        &self,
+        subject_id: u64,
+    ) -> Result<Vec<RelatedPerson>, DepsError> {
+        let url = format!("{}/v0/subjects/{}/persons", self.base_url, subject_id);
+
+        let req = self
+            .client
+            .get(url)
+            .header(reqwest::header::ACCEPT, "application/json")
+            .build()?;
+
+        let res = self.client.execute(req).await?.error_for_status()?;
+
+        let persons: Vec<RelatedPerson> = res.json().await?;
+
+        Ok(persons)
+    }
+
+    /// # 获取条目相关角色 `GET /v0/subjects/{subject_id}/characters`
+    ///
+    /// ## Arguments
+    ///
+    /// * `subject_id` - 条目 ID
+    ///
+    /// ## Example
+    ///
+    /// ```
+    /// # use bgmtv::prelude::*;
+    /// # tokio_test::block_on(async {
+    /// # let client = Client::new();
+    /// let characters = client.get_subject_characters(3559).await.expect("Failed to get subject characters");
+    ///
+    /// let character = characters.iter().find(|c| c.id == 3498);
+    /// assert_eq!(character.map(|c| c.name.as_str()), Some("上条当麻"));
+    /// # });
+    /// ```
+    pub async fn get_subject_characters(
+        &self,
+        subject_id: u64,
+    ) -> Result<Vec<RelatedCharacter>, DepsError> {
+        let url = format!("{}/v0/subjects/{}/characters", self.base_url, subject_id);
+
+        let req = self
+            .client
+            .get(url)
+            .header(reqwest::header::ACCEPT, "application/json")
+            .build()?;
+
+        let res = self.client.execute(req).await?.error_for_status()?;
+
+        let characters: Vec<RelatedCharacter> = res.json().await?;
+
+        Ok(characters)
+    }
+
+    /// # 获取条目相关条目 `GET /v0/subjects/{subject_id}/subjects`
+    ///
+    /// ## Arguments
+    ///
+    /// * `subject_id` - 条目 ID
+    ///
+    /// ## Example
+    ///
+    /// ```
+    /// # use bgmtv::prelude::*;
+    /// # tokio_test::block_on(async {
+    /// # let client = Client::new();
+    /// let subjects = client.get_subject_subjects(3559).await.expect("Failed to get subject subjects");
+    ///
+    /// let subject = subjects.iter().find(|s| s.id == 3582);
+    /// assert_eq!(subject.map(|s| s.name.as_str()), Some("とある魔術の禁書目録外伝 とある科学の超電磁砲"));
+    /// # });
+    /// ```
+    pub async fn get_subject_subjects(
+        &self,
+        subject_id: u64,
+    ) -> Result<Vec<SubjectRelation>, DepsError> {
+        let url = format!("{}/v0/subjects/{}/subjects", self.base_url, subject_id);
+
+        let req = self
+            .client
+            .get(url)
+            .header(reqwest::header::ACCEPT, "application/json")
+            .build()?;
+
+        let res = self.client.execute(req).await?.error_for_status()?;
+
+        let subjects: Vec<SubjectRelation> = res.json().await?;
+
+        Ok(subjects)
+    }
+}
+
+/// # Characters Resource (角色资源)
+///
+/// | API                                           | Description      | Methods                                                    |
+/// | :-------------------------------------------- | :--------------- | :--------------------------------------------------------- |
+/// | `GET  /v0/characters/{character_id}`          | 获取角色信息     | [`get_character`](Client::get_character)                   |
+/// | `GET  /v0/characters/{character_id}/image`    | 获取角色图片     | [`get_character_image`](Client::get_character_image)       |
+/// | `GET  /v0/characters/{character_id}/subjects` | 获取角色相关条目 | [`get_character_subjects`](Client::get_character_subjects) |
+/// | `GET  /v0/characters/{character_id}/persons`  | 获取角色相关人物 | [`get_character_persons`](Client::get_character_persons)   |
+impl Client {
+    /// # 获取角色信息 `GET /v0/characters/{character_id}`
+    ///
+    /// ## Arguments
+    ///
+    /// * `character_id` - 角色 ID
+    ///
+    /// ## Example
+    ///
+    /// ```
+    /// # use bgmtv::prelude::*;
+    /// # #[tokio::main]
+    /// # async fn main() -> anyhow::Result<()> {
+    /// let client = Client::new();
+    /// let character = client.get_character(3498).await?;
+    ///
+    /// assert_eq!(character.name, "上条当麻");
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub async fn get_character(&self, character_id: u64) -> Result<CharacterDetail, DepsError> {
+        let url = format!("{}/v0/characters/{}", self.base_url, character_id);
+
+        let req = self
+            .client
+            .get(url)
+            .header(reqwest::header::ACCEPT, "application/json")
+            .build()?;
+
+        let res = self.client.execute(req).await?.error_for_status()?;
+
+        let character: CharacterDetail = res.json().await?;
+
+        Ok(character)
+    }
+
+    /// # 获取角色图片 `GET /v0/characters/{character_id}/image`
+    ///
+    /// ## Arguments
+    ///
+    /// * `character_id` - 角色 ID
+    ///
+    /// ## Example
+    ///
+    /// ```
+    /// # use bgmtv::prelude::*;
+    /// # #[tokio::main]
+    /// # async fn main() -> anyhow::Result<()> {
+    /// let client = Client::new();
+    /// let image = client.get_character_image(3498, ImageType::Small).await?;
+    ///
+    /// assert_eq!(image.len(), 6245);
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub async fn get_character_image(
+        &self,
+        character_id: u64,
+        image_type: ImageType,
+    ) -> Result<Vec<u8>, DepsError> {
+        let url = format!("{}/v0/characters/{}/image", self.base_url, character_id);
+
+        let req = self
+            .client
+            .get(url)
+            .query(&[("type", image_type)])
+            .build()?;
+
+        let res = self.client.execute(req).await?.error_for_status()?;
+
+        let image = res.bytes().await?;
+
+        Ok(image.to_vec())
+    }
+
+    /// # 获取角色相关条目 `GET /v0/characters/{character_id}/subjects`
+    ///
+    /// ## Arguments
+    ///
+    /// * `character_id` - 角色 ID
+    ///
+    /// ## Example
+    ///
+    /// ```
+    /// # use bgmtv::prelude::*;
+    /// # #[tokio::main]
+    /// # async fn main() -> anyhow::Result<()> {
+    /// let client = Client::new();
+    /// let subjects = client.get_character_subjects(3498).await?;
+    ///
+    /// let subject = subjects.iter().find(|s| s.id == 3559);
+    /// assert_eq!(subject.map(|s| s.name.as_str()), Some("とある魔術の禁書目録"));
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub async fn get_character_subjects(
+        &self,
+        character_id: u64,
+    ) -> Result<Vec<RelatedSubject>, DepsError> {
+        let url = format!("{}/v0/characters/{}/subjects", self.base_url, character_id);
+
+        let req = self
+            .client
+            .get(url)
+            .header(reqwest::header::ACCEPT, "application/json")
+            .build()?;
+
+        let res = self.client.execute(req).await?.error_for_status()?;
+
+        let subjects: Vec<RelatedSubject> = res.json().await?;
+
+        Ok(subjects)
+    }
+
+    /// # 获取角色相关人物 `GET /v0/characters/{character_id}/persons`
+    ///
+    /// ## Arguments
+    ///
+    /// * `character_id` - 角色 ID
+    ///
+    /// ## Example
+    ///
+    /// ```
+    /// # use bgmtv::prelude::*;
+    /// # #[tokio::main]
+    /// # async fn main() -> anyhow::Result<()> {
+    /// let client = Client::new();
+    /// let persons = client.get_character_persons(3498).await?;
+    ///
+    /// let person = persons.iter().find(|p| p.subject_id == 1014);
+    /// assert_eq!(person.map(|p| p.name.as_str()), Some("阿部敦"));
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub async fn get_character_persons(
+        &self,
+        character_id: u64,
+    ) -> Result<Vec<CharacterPerson>, DepsError> {
+        let url = format!("{}/v0/characters/{}/persons", self.base_url, character_id);
+
+        let req = self
+            .client
+            .get(url)
+            .header(reqwest::header::ACCEPT, "application/json")
+            .build()?;
+
+        let res = self.client.execute(req).await?.error_for_status()?;
+
+        let persons: Vec<CharacterPerson> = res.json().await?;
+
+        Ok(persons)
+    }
+}
 
 #[cfg(test)]
 mod tests {
