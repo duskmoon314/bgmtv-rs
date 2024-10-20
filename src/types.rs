@@ -195,6 +195,83 @@ pub enum PersonCareer {
     Actor,
 }
 
+/// Person Character (人物相关角色)
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+pub struct PersonCharacter {
+    /// ID
+    pub id: u64,
+
+    /// 名称
+    pub name: String,
+
+    /// 角色类型
+    pub r#type: CharacterType,
+
+    /// 角色图片
+    pub images: Option<PersonImages>,
+
+    /// 条目 ID
+    pub subject_id: u64,
+
+    /// 条目类型
+    pub subject_type: SubjectType,
+
+    /// 条目名称
+    pub subject_name: String,
+
+    /// 条目中文名称
+    pub subject_name_cn: String,
+
+    pub staff: Option<String>,
+}
+
+/// Person Detail (人物详情)
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+pub struct PersonDetail {
+    /// ID
+    pub id: u64,
+
+    /// 名称
+    pub name: String,
+
+    /// 类型
+    pub r#type: PersonType,
+
+    /// 人物职业
+    pub career: Vec<PersonCareer>,
+
+    /// 人物图片
+    pub images: Option<PersonImages>,
+
+    /// 人物简介
+    pub summary: String,
+
+    pub locked: bool,
+
+    /// 最后修改时间
+    pub last_modified: String,
+
+    /// 附加信息
+    pub infobox: Vec<Infobox>,
+
+    /// 性别
+    pub gender: Option<String>,
+
+    /// 血型
+    pub blood_type: Option<BloodType>,
+
+    /// 出生年份
+    pub birth_year: Option<u16>,
+
+    /// 出生月份
+    pub birth_month: Option<u8>,
+
+    /// 出生日期
+    pub birth_day: Option<u8>,
+
+    pub stat: Stat,
+}
+
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub struct PersonImages {
     pub large: String,

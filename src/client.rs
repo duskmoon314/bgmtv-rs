@@ -554,6 +554,166 @@ impl Client {
     }
 }
 
+/// # Persons Resource (人物资源)
+///
+/// | API                                       | Description      | Methods                                                  |
+/// | :---------------------------------------- | :--------------- | :------------------------------------------------------- |
+/// | `GET  /v0/persons/{person_id}`            | 获取人物信息     | [`get_person`](Client::get_person)                       |
+/// | `GET  /v0/persons/{person_id}/image`      | 获取人物图片     | [`get_person_image`](Client::get_person_image)           |
+/// | `GET  /v0/persons/{person_id}/subjects`   | 获取人物相关条目 | [`get_person_subjects`](Client::get_person_subjects)     |
+/// | `GET  /v0/persons/{person_id}/characters` | 获取人物相关角色 | [`get_person_characters`](Client::get_person_characters) |
+impl Client {
+    /// # 获取人物信息 `GET /v0/persons/{person_id}`
+    ///
+    /// ## Arguments
+    ///
+    /// * `person_id` - 人物 ID
+    ///
+    /// ## Example
+    ///
+    /// ```
+    /// # use bgmtv::prelude::*;
+    /// # #[tokio::main]
+    /// # async fn main() -> anyhow::Result<()> {
+    /// let client = Client::new();
+    /// let person = client.get_person(3608).await?;
+    ///
+    /// assert_eq!(person.name, "鎌池和馬");
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub async fn get_person(&self, person_id: u64) -> Result<PersonDetail, DepsError> {
+        let url = format!("{}/v0/persons/{}", self.base_url, person_id);
+
+        let req = self
+            .client
+            .get(url)
+            .header(reqwest::header::ACCEPT, "application/json")
+            .build()?;
+
+        let res = self.client.execute(req).await?.error_for_status()?;
+
+        let person: PersonDetail = res.json().await?;
+
+        Ok(person)
+    }
+
+    /// # 获取人物图片 `GET /v0/persons/{person_id}/image`
+    ///
+    /// ## Arguments
+    ///
+    /// * `person_id` - 人物 ID
+    ///
+    /// ## Example
+    ///
+    /// ```
+    /// # use bgmtv::prelude::*;
+    /// # #[tokio::main]
+    /// # async fn main() -> anyhow::Result<()> {
+    /// let client = Client::new();
+    /// let image: Vec<u8> = client.get_person_image(3608, ImageType::Small).await?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub async fn get_person_image(
+        &self,
+        person_id: u64,
+        image_type: ImageType,
+    ) -> Result<Vec<u8>, DepsError> {
+        let url = format!("{}/v0/persons/{}/image", self.base_url, person_id);
+
+        let req = self
+            .client
+            .get(url)
+            .query(&[("type", image_type)])
+            .build()?;
+
+        let res = self.client.execute(req).await?.error_for_status()?;
+
+        let image = res.bytes().await?;
+
+        Ok(image.to_vec())
+    }
+
+    /// # 获取人物相关条目 `GET /v0/persons/{person_id}/subjects`
+    ///
+    /// ## Arguments
+    ///
+    /// * `person_id` - 人物 ID
+    ///
+    /// ## Example
+    ///
+    /// ```
+    /// # use bgmtv::prelude::*;
+    /// # #[tokio::main]
+    /// # async fn main() -> anyhow::Result<()> {
+    /// let client = Client::new();
+    /// let subjects = client.get_person_subjects(3608).await?;
+    ///
+    /// let subject = subjects.iter().find(|s| s.id == 1014);
+    /// assert_eq!(subject.map(|s| s.name.as_str()), Some("とある魔術の禁書目録"));
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub async fn get_person_subjects(
+        &self,
+        person_id: u64,
+    ) -> Result<Vec<RelatedSubject>, DepsError> {
+        let url = format!("{}/v0/persons/{}/subjects", self.base_url, person_id);
+
+        let req = self
+            .client
+            .get(url)
+            .header(reqwest::header::ACCEPT, "application/json")
+            .build()?;
+
+        let res = self.client.execute(req).await?.error_for_status()?;
+
+        let subjects: Vec<RelatedSubject> = res.json().await?;
+
+        Ok(subjects)
+    }
+
+    /// # 获取人物相关角色 `GET /v0/persons/{person_id}/characters`
+    ///
+    /// ## Arguments
+    ///
+    /// * `person_id` - 人物 ID
+    ///
+    /// ## Example
+    ///
+    /// ```
+    /// # use bgmtv::prelude::*;
+    /// # #[tokio::main]
+    /// # async fn main() -> anyhow::Result<()> {
+    /// let client = Client::new();
+    /// let characters = client.get_person_characters(5015).await?;
+    ///
+    /// let character = characters.iter().find(|c| c.id == 3498);
+    /// assert_eq!(character.map(|c| c.name.as_str()), Some("上条当麻"));
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub async fn get_person_characters(
+        &self,
+        person_id: u64,
+    ) -> Result<Vec<PersonCharacter>, DepsError> {
+        let url = format!("{}/v0/persons/{}/characters", self.base_url, person_id);
+
+        let req = self
+            .client
+            .get(url)
+            .header(reqwest::header::ACCEPT, "application/json")
+            .build()?;
+
+        let res = self.client.execute(req).await?.error_for_status()?;
+
+        let characters: Vec<PersonCharacter> = res.json().await?;
+
+        Ok(characters)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
