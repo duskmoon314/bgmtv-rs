@@ -7,14 +7,16 @@ bgmtv is an API wrapper for [bangumi.tv](https://bgm.tv) based on [reqwest](http
 ```rust
 use bgmtv::prelude::*;
 
-tokio_test::block_on(async {
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
     let client = Client::builder()
-    .user_agent("duskmoon/bgmtv/0.1.0 (https://github.com/duskmoon314/bgmtv-rs)")
-    .build()
-    .expect("Failed to build client");
+        .user_agent("duskmoon/bgmtv/0.1.0 (https://github.com/duskmoon314/bgmtv-rs)")
+        .build()?;
 
-    let subject = client.get_subject(3559).await.expect("Failed to get subject");
+    let subject = client.get_subject(3559).await?;
 
-    assert_eq!(subject.name, "とある魔術の禁書目録")
-});
+    assert_eq!(subject.name, "とある魔術の禁書目録");
+
+    Ok(())
+}
 ```

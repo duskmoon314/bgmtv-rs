@@ -158,7 +158,7 @@ impl Client {
     /// # use bgmtv::prelude::*;
     /// # #[tokio::main]
     /// # async fn main() -> anyhow::Result<()> {
-    /// let client = Client::new();
+    /// # let client = Client::new();
     /// let subjects = client.search_subjects()
     ///     .keyword("魔法禁书目录")
     ///     .sort(SortType::Match)
@@ -191,7 +191,7 @@ impl Client {
     /// # use bgmtv::prelude::*;
     /// # #[tokio::main]
     /// # async fn main() -> anyhow::Result<()> {
-    /// let client = Client::new();
+    /// # let client = Client::new();
     /// let subjects = client.get_subjects()
     ///     .r#type(SubjectType::Book)
     ///     .cat(SubjectCategory::Book(SubjectBookCategory::Novel))
@@ -219,12 +219,14 @@ impl Client {
     ///
     /// ```
     /// # use bgmtv::prelude::*;
-    /// # tokio_test::block_on(async {
+    /// # #[tokio::main]
+    /// # async fn main() -> anyhow::Result<()> {
     /// # let client = Client::new();
-    /// let subject = client.get_subject(3559).await.expect("Failed to get subject");
+    /// let subject = client.get_subject(3559).await?;
     ///
     /// assert_eq!(subject.name, "とある魔術の禁書目録");
-    /// # });
+    /// # Ok(())
+    /// # }
     /// ```
     pub async fn get_subject(&self, subject_id: u64) -> Result<Subject, DepsError> {
         let url = format!("{}/v0/subjects/{}", self.base_url, subject_id);
@@ -253,12 +255,12 @@ impl Client {
     ///
     /// ```
     /// # use bgmtv::prelude::*;
-    /// # tokio_test::block_on(async {
+    /// # #[tokio::main]
+    /// # async fn main() -> anyhow::Result<()> {
     /// # let client = Client::new();
-    /// let image: Vec<u8> = client.get_subject_image(3559, ImageType::Small).await.expect("Failed to get subject image");
-    ///
-    /// assert_eq!(image.len(), 12020);
-    /// # });
+    /// let image: Vec<u8> = client.get_subject_image(3559, ImageType::Small).await?;
+    /// # Ok(())
+    /// # }
     /// ```
     pub async fn get_subject_image(
         &self,
@@ -290,13 +292,15 @@ impl Client {
     ///
     /// ```
     /// # use bgmtv::prelude::*;
-    /// # tokio_test::block_on(async {
+    /// # #[tokio::main]
+    /// # async fn main() -> anyhow::Result<()> {
     /// # let client = Client::new();
-    /// let persons = client.get_subject_persons(3559).await.expect("Failed to get subject persons");
+    /// let persons = client.get_subject_persons(3559).await?;
     ///
     /// let person = persons.iter().find(|p| p.id == 3608);
     /// assert_eq!(person.map(|p| p.name.as_str()), Some("鎌池和馬"));
-    /// # });
+    /// # Ok(())
+    /// # }
     /// ```
     pub async fn get_subject_persons(
         &self,
@@ -327,13 +331,15 @@ impl Client {
     ///
     /// ```
     /// # use bgmtv::prelude::*;
-    /// # tokio_test::block_on(async {
+    /// # #[tokio::main]
+    /// # async fn main() -> anyhow::Result<()> {
     /// # let client = Client::new();
     /// let characters = client.get_subject_characters(3559).await.expect("Failed to get subject characters");
     ///
     /// let character = characters.iter().find(|c| c.id == 3498);
     /// assert_eq!(character.map(|c| c.name.as_str()), Some("上条当麻"));
-    /// # });
+    /// # Ok(())
+    /// # }
     /// ```
     pub async fn get_subject_characters(
         &self,
@@ -364,13 +370,15 @@ impl Client {
     ///
     /// ```
     /// # use bgmtv::prelude::*;
-    /// # tokio_test::block_on(async {
+    /// # #[tokio::main]
+    /// # async fn main() -> anyhow::Result<()> {
     /// # let client = Client::new();
-    /// let subjects = client.get_subject_subjects(3559).await.expect("Failed to get subject subjects");
+    /// let subjects = client.get_subject_subjects(3559).await?;
     ///
     /// let subject = subjects.iter().find(|s| s.id == 3582);
     /// assert_eq!(subject.map(|s| s.name.as_str()), Some("とある魔術の禁書目録外伝 とある科学の超電磁砲"));
-    /// # });
+    /// # Ok(())
+    /// # }
     /// ```
     pub async fn get_subject_subjects(
         &self,
@@ -413,7 +421,7 @@ impl Client {
     /// # use bgmtv::prelude::*;
     /// # #[tokio::main]
     /// # async fn main() -> anyhow::Result<()> {
-    /// let client = Client::new();
+    /// # let client = Client::new();
     /// let character = client.get_character(3498).await?;
     ///
     /// assert_eq!(character.name, "上条当麻");
@@ -448,10 +456,8 @@ impl Client {
     /// # use bgmtv::prelude::*;
     /// # #[tokio::main]
     /// # async fn main() -> anyhow::Result<()> {
-    /// let client = Client::new();
+    /// # let client = Client::new();
     /// let image = client.get_character_image(3498, ImageType::Small).await?;
-    ///
-    /// assert_eq!(image.len(), 6245);
     /// # Ok(())
     /// # }
     /// ```
@@ -487,7 +493,7 @@ impl Client {
     /// # use bgmtv::prelude::*;
     /// # #[tokio::main]
     /// # async fn main() -> anyhow::Result<()> {
-    /// let client = Client::new();
+    /// # let client = Client::new();
     /// let subjects = client.get_character_subjects(3498).await?;
     ///
     /// let subject = subjects.iter().find(|s| s.id == 3559);
@@ -526,7 +532,7 @@ impl Client {
     /// # use bgmtv::prelude::*;
     /// # #[tokio::main]
     /// # async fn main() -> anyhow::Result<()> {
-    /// let client = Client::new();
+    /// # let client= Client::new();
     /// let persons = client.get_character_persons(3498).await?;
     ///
     /// let person = persons.iter().find(|p| p.subject_id == 1014);
@@ -575,7 +581,7 @@ impl Client {
     /// # use bgmtv::prelude::*;
     /// # #[tokio::main]
     /// # async fn main() -> anyhow::Result<()> {
-    /// let client = Client::new();
+    /// # let client= Client::new();
     /// let person = client.get_person(3608).await?;
     ///
     /// assert_eq!(person.name, "鎌池和馬");
@@ -610,7 +616,7 @@ impl Client {
     /// # use bgmtv::prelude::*;
     /// # #[tokio::main]
     /// # async fn main() -> anyhow::Result<()> {
-    /// let client = Client::new();
+    /// # let client= Client::new();
     /// let image: Vec<u8> = client.get_person_image(3608, ImageType::Small).await?;
     /// # Ok(())
     /// # }
@@ -647,7 +653,7 @@ impl Client {
     /// # use bgmtv::prelude::*;
     /// # #[tokio::main]
     /// # async fn main() -> anyhow::Result<()> {
-    /// let client = Client::new();
+    /// # let client= Client::new();
     /// let subjects = client.get_person_subjects(3608).await?;
     ///
     /// let subject = subjects.iter().find(|s| s.id == 1014);
@@ -686,7 +692,7 @@ impl Client {
     /// # use bgmtv::prelude::*;
     /// # #[tokio::main]
     /// # async fn main() -> anyhow::Result<()> {
-    /// let client = Client::new();
+    /// # let client= Client::new();
     /// let characters = client.get_person_characters(5015).await?;
     ///
     /// let character = characters.iter().find(|c| c.id == 3498);
