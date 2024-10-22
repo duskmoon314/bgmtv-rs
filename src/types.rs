@@ -98,6 +98,72 @@ pub enum CharacterType {
     Organization = 4,
 }
 
+/// Episode (章节)
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+pub struct Episode {
+    /// ID
+    pub id: u64,
+
+    /// 章节类型
+    pub r#type: EpisodeType,
+
+    /// 名称
+    pub name: String,
+
+    /// 中文名称
+    pub name_cn: String,
+
+    /// 同类条目的排序和集数
+    pub sort: u64,
+
+    /// 条目内的集数，从 1 开始。非本篇剧集此字段无意义
+    pub ep: Option<u64>,
+
+    /// 发布日期
+    pub airdate: String,
+
+    /// 评论数
+    pub comment: u64,
+
+    /// 原始时长
+    pub duration: String,
+
+    /// 简介
+    pub desc: String,
+
+    /// 音乐曲目的碟片数
+    pub disc: u64,
+
+    /// 服务器解析的时长
+    pub duration_seconds: Option<u64>,
+}
+
+/// Episode Type (章节类型)
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize_repr, Serialize_repr)]
+#[repr(u8)]
+pub enum EpisodeType {
+    /// 本篇
+    MainStory = 0,
+
+    /// 特别篇
+    SP = 1,
+
+    /// OP
+    OP = 2,
+
+    /// ED
+    ED = 3,
+
+    /// 预告/宣传/广告
+    PV = 4,
+
+    /// MAD
+    MAD = 5,
+
+    /// 其他
+    Other = 6,
+}
+
 /// Images (图片)
 ///
 /// 存储不同尺寸的图片链接。
@@ -143,6 +209,21 @@ pub enum InfoboxValue {
 pub enum InfoboxValueItem {
     KV { k: String, v: String },
     V { v: String },
+}
+
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+pub struct PagedEpisode {
+    /// 条目总数
+    pub total: u64,
+
+    /// 每页数量
+    pub limit: u64,
+
+    /// 当前页码
+    pub offset: u64,
+
+    /// 数据
+    pub data: Vec<Episode>,
 }
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]

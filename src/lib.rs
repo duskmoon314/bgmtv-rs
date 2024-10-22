@@ -40,17 +40,26 @@ pub mod error {
             /// 这会出现在将某些类型序列化为 JSON 时，目前是用于将一些 enum 转换为对应的 JSON 字符串。
             Serialize(serde_json::Error)
         };
+
         /// Error for [Client::search_subjects](crate::client::Client::search_subjects)
         SearchSubjectsError = {
             /// Error of building [SearchSubjectsExecutor](crate::client::subjects::SearchSubjectsExecutor)
             #[display("Cannot build request to search subjects: {0}")]
             Builder(crate::client::subjects::SearchSubjectsExecutorBuilderError)
         } || DepsError;
+
         /// Error for [Client::get_subjects](crate::client::Client::get_subjects)
         GetSubjectsError = {
             /// Error of building [GetSubjectsExecutor](crate::client::subjects::GetSubjectsExecutor)
             #[display("Cannot build request to get subjects: {0}")]
             Builder(crate::client::subjects::GetSubjectsExecutorBuilderError)
+        } || DepsError;
+
+        /// Error for [Client::get_episodes](crate::client::Client::get_episodes)
+        GetEpisodesError = {
+            /// Error of building [GetEpisodesExecutor](crate::client::episodes::GetEpisodesExecutor)
+            #[display("Cannot build request to get episodes: {0}")]
+            Builder(crate::client::episodes::GetEpisodesExecutorBuilderError)
         } || DepsError;
     }
 }

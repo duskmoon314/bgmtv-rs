@@ -6,9 +6,8 @@ use derive_builder::{Builder, UninitializedFieldError};
 
 use crate::prelude::*;
 
+pub mod episodes;
 pub mod subjects;
-
-use subjects::*;
 
 pub(crate) const DEFAULT_USER_AGENT: &str = concat!(
     "duskmoon/bgmtv/",
@@ -177,8 +176,8 @@ impl Client {
     /// # Ok(())
     /// # }
     /// ```
-    pub fn search_subjects(&self) -> SearchSubjectsExecutorBuilder {
-        SearchSubjectsExecutor::builder(self)
+    pub fn search_subjects(&self) -> subjects::SearchSubjectsExecutorBuilder {
+        subjects::SearchSubjectsExecutor::builder(self)
     }
 
     /// # 浏览条目 `GET /v0/subjects`
@@ -205,8 +204,8 @@ impl Client {
     /// # Ok(())
     /// # }
     /// ```
-    pub fn get_subjects(&self) -> GetSubjectsExecutorBuilder {
-        GetSubjectsExecutor::builder(self)
+    pub fn get_subjects(&self) -> subjects::GetSubjectsExecutorBuilder {
+        subjects::GetSubjectsExecutor::builder(self)
     }
 
     /// # 获取条目 `GET /v0/subjects/{subject_id}`
@@ -397,6 +396,81 @@ impl Client {
         let subjects: Vec<SubjectRelation> = res.json().await?;
 
         Ok(subjects)
+    }
+}
+
+/// # Episodes Resource (章节资源)
+///
+/// | API                             | Description  | Methods                                |
+/// | :------------------------------ | :----------- | :------------------------------------- |
+/// | `GET /v0/episodes`              | 获取章节列表 | [`get_episodes`](Client::get_episodes) |
+/// | `GET /v0/episodes/{episode_id}` | 获取章节信息 | [`get_episode`](Client::get_episode)   |
+impl Client {
+    /// # 获取章节列表 `GET /v0/episodes`
+    ///
+    /// ## Arguments
+    ///
+    /// * `subject_id` - 条目 ID
+    ///
+    /// ## Returns
+    ///
+    /// 返回一个 Builder 模式的 [`GetEpisodesExecutorBuilder`], 用于构建请求参数并发送请求
+    ///
+    /// ## Example
+    ///
+    /// ```
+    /// # use bgmtv::prelude::*;
+    /// # #[tokio::main]
+    /// # async fn main() -> anyhow::Result<()> {
+    /// # let client = Client::new();
+    /// let episodes = client.get_episodes(1014)
+    ///     .r#type(EpisodeType::MainStory)
+    ///     .limit(1)
+    ///     .send()
+    ///     .await?;
+    ///
+    /// assert_eq!(episodes.data[0].id, 1731);
+    /// assert_eq!(episodes.data[0].name, "学園都市");
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub fn get_episodes(&self, subject_id: u64) -> episodes::GetEpisodesExecutorBuilder {
+        episodes::GetEpisodesExecutor::builder(self, subject_id)
+    }
+
+    /// # 获取章节信息 `GET /v0/episodes/{episode_id}`
+    ///
+    /// ## Arguments
+    ///
+    /// * `episode_id` - 章节 ID
+    ///
+    /// ## Example
+    ///
+    /// ```
+    /// # use bgmtv::prelude::*;
+    /// # #[tokio::main]
+    /// # async fn main() -> anyhow::Result<()> {
+    /// # let client = Client::new();
+    /// let episode = client.get_episode(1731).await?;
+    ///
+    /// assert_eq!(episode.name, "学園都市");
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub async fn get_episode(&self, episode_id: u64) -> Result<Episode, DepsError> {
+        let url = format!("{}/v0/episodes/{}", self.base_url, episode_id);
+
+        let req = self
+            .client
+            .get(url)
+            .header(reqwest::header::ACCEPT, "application/json")
+            .build()?;
+
+        let res = self.client.execute(req).await?.error_for_status()?;
+
+        let episode: Episode = res.json().await?;
+
+        Ok(episode)
     }
 }
 
