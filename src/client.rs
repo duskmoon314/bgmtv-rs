@@ -149,7 +149,7 @@ impl Client {
 impl Client {
     /// # 条目搜索 `POST /v0/search/subjects`
     ///
-    /// 返回一个 Builder 模式的 [`SearchSubjectsExecutorBuilder`], 用于构建请求参数并发送请求
+    /// 返回一个 Builder 模式的 [`SearchSubjectsExecutorBuilder`](subjects::SearchSubjectsExecutorBuilder), 用于构建请求参数并发送请求
     ///
     /// ## Example
     ///
@@ -182,7 +182,7 @@ impl Client {
 
     /// # 浏览条目 `GET /v0/subjects`
     ///
-    /// 返回一个 Builder 模式的 [`GetSubjectsExecutorBuilder`], 用于构建请求参数并发送请求
+    /// 返回一个 Builder 模式的 [`GetSubjectsExecutorBuilder`](subjects::GetSubjectsExecutorBuilder), 用于构建请求参数并发送请求
     ///
     /// ## Example
     ///
@@ -414,7 +414,7 @@ impl Client {
     ///
     /// ## Returns
     ///
-    /// 返回一个 Builder 模式的 [`GetEpisodesExecutorBuilder`], 用于构建请求参数并发送请求
+    /// 返回一个 Builder 模式的 [`GetEpisodesExecutorBuilder`](episodes::GetEpisodesExecutorBuilder), 用于构建请求参数并发送请求
     ///
     /// ## Example
     ///
@@ -791,6 +791,127 @@ impl Client {
         let characters: Vec<PersonCharacter> = res.json().await?;
 
         Ok(characters)
+    }
+}
+
+/// # User Resource (用户资源)
+///
+/// | API                               | Description  | Methods                                      |
+/// | :-------------------------------- | :----------- | :------------------------------------------- |
+/// | `GET /v0/users/{username}`        | 获取用户信息 | [`get_user`](Client::get_user)               |
+/// | `GET /v0/users/{username}/avatar` | 获取用户头像 | [`get_user_avatar`](Client::get_user_avatar) |
+/// | `GET /v0/me`                      | 获取当前用户 | [`get_me`](Client::get_me)                   |
+impl Client {
+    /// # 获取用户信息 `GET /v0/users/{username}`
+    ///
+    /// ## Arguments
+    ///
+    /// * `username` - 用户名
+    ///
+    /// ## Example
+    ///
+    /// ```
+    /// # use bgmtv::prelude::*;
+    /// # #[tokio::main]
+    /// # async fn main() -> anyhow::Result<()> {
+    /// # let client = Client::new();
+    /// let user = client.get_user("sai").await?;
+    ///
+    /// assert_eq!(user.username, "sai");
+    /// assert_eq!(user.id, 1);
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub async fn get_user(&self, username: &str) -> Result<User, DepsError> {
+        let url = format!("{}/v0/users/{}", self.base_url, username);
+
+        let req = self
+            .client
+            .get(url)
+            .header(reqwest::header::ACCEPT, "application/json")
+            .build()?;
+
+        let res = self.client.execute(req).await?.error_for_status()?;
+
+        let user: User = res.json().await?;
+
+        Ok(user)
+    }
+
+    /// # 获取用户头像 `GET /v0/users/{username}/avatar`
+    ///
+    /// ## Arguments
+    ///
+    /// * `username` - 用户名
+    /// * `type` - 图片类型, 支持 `Small`, `Medium`, `Large`
+    ///
+    /// ## Example
+    ///
+    /// ```
+    /// # use bgmtv::prelude::*;
+    /// # #[tokio::main]
+    /// # async fn main() -> anyhow::Result<()> {
+    /// # let client = Client::new();
+    /// let image = client.get_user_avatar("sai", ImageType::Small).await?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub async fn get_user_avatar(
+        &self,
+        username: &str,
+        image_type: ImageType,
+    ) -> Result<Vec<u8>, DepsError> {
+        let url = format!("{}/v0/users/{}/avatar", self.base_url, username);
+
+        let req = self
+            .client
+            .get(url)
+            .query(&[("type", image_type)])
+            .build()?;
+
+        let res = self.client.execute(req).await?.error_for_status()?;
+
+        let image = res.bytes().await?;
+
+        Ok(image.to_vec())
+    }
+
+    /// # 获取当前用户 `GET /v0/me`
+    ///
+    /// <div class="warning">
+    ///
+    /// 此方法需要提供 token，你可以在 <https://next.bgm.tv/demo/access-token> 生成。
+    ///
+    /// </div>
+    ///
+    /// ## Example
+    ///
+    /// ```
+    /// # use bgmtv::prelude::*;
+    /// # #[tokio::main]
+    /// # async fn main() -> anyhow::Result<()> {
+    /// # let token = std::env::var("BGMTV_TOKEN").expect("Please set BGMTV_TOKEN to test get_me");
+    /// let client = Client::builder()
+    ///     .token(token)
+    ///     .build()?;
+    /// let user = client.get_me().await?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub async fn get_me(&self) -> Result<User, DepsError> {
+        let url = format!("{}/v0/me", self.base_url);
+
+        let req = self
+            .client
+            .get(url)
+            .header(reqwest::header::ACCEPT, "application/json")
+            .build()?;
+
+        let res = self.client.execute(req).await?.error_for_status()?;
+
+        let user: User = res.json().await?;
+
+        Ok(user)
     }
 }
 

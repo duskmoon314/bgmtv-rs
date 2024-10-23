@@ -837,6 +837,21 @@ pub enum SubjectType {
     Real = 6,
 }
 
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+pub struct User {
+    /// Id
+    pub id: u64,
+
+    /// 用户名
+    pub username: String,
+
+    /// 昵称
+    pub nickname: String,
+
+    /// 个人签名
+    pub sign: String,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
