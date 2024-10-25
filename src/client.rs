@@ -523,6 +523,7 @@ impl Client {
     /// ## Arguments
     ///
     /// * `character_id` - 角色 ID
+    /// * `image_type` - 图片类型, 支持 `Small`, `Grid`, `Medium`, `Large`
     ///
     /// ## Example
     ///
@@ -683,6 +684,7 @@ impl Client {
     /// ## Arguments
     ///
     /// * `person_id` - 人物 ID
+    /// * `type` - 图片类型, 支持 `Small`, `Grid`, `Medium`, `Large`
     ///
     /// ## Example
     ///

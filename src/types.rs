@@ -167,7 +167,10 @@ pub enum EpisodeType {
 /// Images (图片)
 ///
 /// 存储不同尺寸的图片链接。
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize, utility_types::Pick)]
+#[pick(
+    arg(ident = PersonImages, fields(large, medium, small, grid), derive(Clone, Debug, PartialEq, Deserialize, Serialize)),
+)]
 pub struct Images {
     pub large: String,
 
@@ -351,17 +354,6 @@ pub struct PersonDetail {
     pub birth_day: Option<u8>,
 
     pub stat: Stat,
-}
-
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
-pub struct PersonImages {
-    pub large: String,
-
-    pub medium: String,
-
-    pub small: String,
-
-    pub grid: String,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize_repr, Serialize_repr)]
