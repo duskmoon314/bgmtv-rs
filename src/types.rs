@@ -527,32 +527,76 @@ pub struct SearchSubjectsItem {
 
     /// 条目类型
     pub r#type: SubjectType,
-
-    /// 发布日期
-    pub date: String,
-
-    /// 图片
-    pub image: String,
-
-    /// 简介
-    pub summary: String,
-
     /// 名称
     pub name: String,
-
     /// 中文名称
     pub name_cn: String,
 
+    /// 简介
+    pub summary: String,
+    /// 是否为书籍系列的主条目
+    pub series: bool,
+    /// 是否为 NSFW
+    pub nsfw: bool,
+    /// 是否锁定
+    pub locked: bool,
+    /// 发布日期
+    pub date: Option<String>,
+    /// 发布平台
+    pub platform: String,
+    /// 图片
+    pub image: String,
+
+    /// 图片
+    pub images: Images,
+    /// 附加信息
+    pub infobox: Option<Vec<Infobox>>,
+    /// 书籍条目的册数
+    pub volumes: u64,
+    /// 话数
+    pub eps: u64,
+    /// rating
+    pub rating: SubjectRating,
+    /// 收藏
+    pub collection: SubjectCollection,
+    /// 由维基人维护的 tag
+    pub meta_tags: Vec<String>,
     /// 标签    
     pub tags: Vec<SubjectTag>,
-
-    /// 评分
-    pub score: f64,
-
-    /// 排名
-    pub rank: u64,
 }
 
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+pub struct SearchSubjectsRatingCount {
+    #[serde(rename = "1")]
+    pub one: u64,
+
+    #[serde(rename = "2")]
+    pub two: u64,
+
+    #[serde(rename = "3")]
+    pub three: u64,
+
+    #[serde(rename = "4")]
+    pub four: u64,
+
+    #[serde(rename = "5")]
+    pub five: u64,
+
+    #[serde(rename = "6")]
+    pub six: u64,
+
+    #[serde(rename = "7")]
+    pub seven: u64,
+
+    #[serde(rename = "8")]
+    pub eight: u64,
+
+    #[serde(rename = "9")]
+    pub nine: u64,
+
+    #[serde(rename = "10")]
+    pub ten: u64,
+}
 #[derive(Clone, Copy, Debug, Default, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum SortType {

@@ -69,7 +69,6 @@ impl SearchSubjectsExecutor<'_> {
             .build()?;
 
         let res = self.client.client.execute(req).await?.error_for_status()?;
-
         let subjects: SearchSubjects = res.json().await?;
 
         Ok(subjects)
@@ -144,7 +143,7 @@ impl Deref for GetSubjectsExecutor<'_> {
 
 impl<'a> GetSubjectsExecutor<'a> {
     /// 返回一个 Builder 模式的 [`GetSubjectsExecutorBuilder`], 用于构建请求参数并发送请求
-    pub(super) fn builder(client: &'a Client) -> GetSubjectsExecutorBuilder {
+    pub(super) fn builder(client: &'a Client) -> GetSubjectsExecutorBuilder<'a> {
         GetSubjectsExecutorBuilder::default().client(client)
     }
 
