@@ -52,7 +52,7 @@ impl SearchSubjectsExecutor<'_> {
     /// 发送请求
     ///
     /// 根据构建的请求参数发送请求，并返回搜索结果
-    pub async fn send(&self) -> Result<SearchSubjects, SearchSubjectsError> {
+    pub async fn send(&self) -> Result<PagedSubject, SearchSubjectsError> {
         let url = format!("{}/v0/search/subjects", self.client.base_url);
 
         let req = self
@@ -70,7 +70,7 @@ impl SearchSubjectsExecutor<'_> {
 
         let res = self.client.client.execute(req).await?.error_for_status()?;
 
-        let subjects: SearchSubjects = res.json().await?;
+        let subjects: PagedSubject = res.json().await?;
 
         Ok(subjects)
     }
@@ -80,7 +80,7 @@ impl SearchSubjectsExecutorBuilder<'_> {
     /// 发送请求
     ///
     /// 此方法会先调用 [`build`](SearchSubjectsExecutorBuilder::build) 方法构建，然后发送请求
-    pub async fn send(self) -> Result<SearchSubjects, SearchSubjectsError> {
+    pub async fn send(self) -> Result<PagedSubject, SearchSubjectsError> {
         self.build()?.send().await
     }
 }
@@ -144,7 +144,7 @@ impl Deref for GetSubjectsExecutor<'_> {
 
 impl<'a> GetSubjectsExecutor<'a> {
     /// 返回一个 Builder 模式的 [`GetSubjectsExecutorBuilder`], 用于构建请求参数并发送请求
-    pub(super) fn builder(client: &'a Client) -> GetSubjectsExecutorBuilder {
+    pub(super) fn builder(client: &'a Client) -> GetSubjectsExecutorBuilder<'a> {
         GetSubjectsExecutorBuilder::default().client(client)
     }
 

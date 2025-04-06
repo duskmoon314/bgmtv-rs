@@ -81,7 +81,8 @@ impl ClientBuilder {
                 reqwest::header::HeaderValue::from_str(&format!("Bearer {}", token)).unwrap(),
             );
         }
-        reqwest::Client::builder()
+        let client = reqwest::Client::builder()
+            // .use_rustls_tls()
             .user_agent(
                 self.user_agent
                     .clone()
@@ -90,7 +91,9 @@ impl ClientBuilder {
             )
             .default_headers(headers)
             .build()
-            .map_err(|_| UninitializedFieldError::new("client"))
+            .map_err(|_| UninitializedFieldError::new("client"))?;
+
+        Ok(client)
     }
 }
 
@@ -100,7 +103,7 @@ impl Default for Client {
     }
 }
 
-/// # Basic methods for [`Client`].
+/// # Basic methods for [`Client`]
 impl Client {
     /// 创建一个默认的 [`Client`] 对象。
     pub fn new() -> Self {

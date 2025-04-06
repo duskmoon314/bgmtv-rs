@@ -437,21 +437,6 @@ pub struct RelatedSubject {
 }
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
-pub struct SearchSubjects {
-    /// 搜索结果数量
-    pub total: u64,
-
-    /// 当前分页数量
-    pub limit: u64,
-
-    /// 当前分页参数
-    pub offset: u64,
-
-    /// 数据
-    pub data: Vec<SearchSubjectsItem>,
-}
-
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub struct SearchSubjectsBody {
     /// 搜索关键词
     pub keyword: String,
@@ -519,40 +504,6 @@ impl SearchSubjectsFilter {
     }
 }
 
-/// Search Subjects Item (搜索条目数据)
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
-pub struct SearchSubjectsItem {
-    /// ID
-    pub id: u64,
-
-    /// 条目类型
-    pub r#type: SubjectType,
-
-    /// 发布日期
-    pub date: String,
-
-    /// 图片
-    pub image: String,
-
-    /// 简介
-    pub summary: String,
-
-    /// 名称
-    pub name: String,
-
-    /// 中文名称
-    pub name_cn: String,
-
-    /// 标签    
-    pub tags: Vec<SubjectTag>,
-
-    /// 评分
-    pub score: f64,
-
-    /// 排名
-    pub rank: u64,
-}
-
 #[derive(Clone, Copy, Debug, Default, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum SortType {
@@ -609,7 +560,14 @@ pub struct Subject {
     pub platform: String,
 
     /// 图片
+    ///
+    /// 包含不同尺寸的图片链接
     pub images: Images,
+
+    /// 封面图片 (?)
+    ///
+    /// 实际测试中发现 `/v0/search/subjects` 返回的结果中会有这一项
+    pub image: Option<String>,
 
     /// 附加信息
     pub infobox: Vec<Infobox>,
@@ -621,7 +579,7 @@ pub struct Subject {
     pub eps: u64,
 
     /// 总集数
-    pub total_episodes: u64,
+    pub total_episodes: Option<u64>,
 
     /// 评分
     pub rating: SubjectRating,
@@ -944,7 +902,7 @@ mod tests {
         assert_eq!(subject.platform, "小说");
         assert_eq!(subject.volumes, 24);
         assert_eq!(subject.eps, 0);
-        assert_eq!(subject.total_episodes, 0);
+        assert_eq!(subject.total_episodes, Some(0));
         assert_eq!(subject.rating.rank, 1824);
         assert_eq!(subject.collection.wish, 274);
         assert!(subject.tags.len() > 0);
